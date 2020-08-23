@@ -4,9 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.finin.R
+import com.example.finin.db.User
+import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment() {
 
@@ -15,23 +22,79 @@ class MainFragment : Fragment() {
     }
 
     private lateinit var viewModel: MainViewModel
+    private lateinit var adapter: UserAdapter
+    private var userList: List<User> = arrayListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         return inflater.inflate(R.layout.main_fragment, container, false)
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
 
+    override fun onResume() {
+        super.onResume()
+        shimmerFrameLayout.startShimmer()
+    }
+
+    override fun onPause() {
+        shimmerFrameLayout.stopShimmer()
+        super.onPause()
     }
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        adapter = UserAdapter(userList)
+        listView.addItemDecoration(
+            DividerItemDecoration(
+                listView.context,
+                (listView.layoutManager as LinearLayoutManager).orientation
+            )
+        )
+        listView.adapter = adapter
+        viewModel.getUsers(false).observe(viewLifecycleOwner, Observer {
+            when {
+                it.startsWith("Error:", true) -> {
+                    shimmerFrameLayout.startShimmer()
+                    shimmerFrameLayout.visibility = View.GONE
+                    listView.visibility = View.GONE
+                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+        viewModel.userLiveData.observe(viewLifecycleOwner, Observer {
+            if (it.isNotEmpty()) {
+                shimmerFrameLayout.startShimmer()
+                shimmerFrameLayout.visibility = View.GONE
+                listView.visibility = View.VISIBLE
+                userList = it
+                adapter.setData(userList)
+                adapter.notifyDataSetChanged()
+            }
+        })
+
+        listView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = listView.layoutManager as LinearLayoutManager
+                if (layoutManager.findLastVisibleItemPosition() == userList.size - 1) {
+                    loadNextUserList()
+                }
+            }
+        })
+
+    }
+
+    private fun loadNextUserList() {
+        if (viewModel.hasMoreUsers()) {
+            viewModel.getUsers(true)
+        }
+
     }
 
 }

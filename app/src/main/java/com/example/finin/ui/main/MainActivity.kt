@@ -1,8 +1,8 @@
-package com.example.finin
+package com.example.finin.ui.main
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.finin.ui.main.MainFragment
+import com.example.finin.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
