@@ -48,12 +48,6 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         adapter = UserAdapter(userList)
-        listView.addItemDecoration(
-            DividerItemDecoration(
-                listView.context,
-                (listView.layoutManager as LinearLayoutManager).orientation
-            )
-        )
         listView.adapter = adapter
         viewModel.getUsers(false).observe(viewLifecycleOwner, Observer {
             when {
