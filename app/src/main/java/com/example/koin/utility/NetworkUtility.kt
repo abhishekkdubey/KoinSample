@@ -25,7 +25,7 @@ object NetworkUtility {
             }
         } else {
             connMgr.run {
-                connMgr.activeNetworkInfo?.run {
+                activeNetworkInfo?.run {
                     isConnected = if (type == ConnectivityManager.TYPE_WIFI) true
                     else type == ConnectivityManager.TYPE_MOBILE
                 }
